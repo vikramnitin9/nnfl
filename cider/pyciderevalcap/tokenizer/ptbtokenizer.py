@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# 
+#
 # File Name : ptbtokenizer.py
 #
 # Description : Do the PTB Tokenization and remove punctuations.
@@ -21,7 +21,7 @@ STANFORD_CORENLP_3_4_1_JAR = 'stanford-corenlp-3.4.1.jar'
 
 # punctuations to be removed from the sentences
 PUNCTUATIONS = ["''", "'", "``", "`", "-LRB-", "-RRB-", "-LCB-", "-RCB-", \
-        ".", "?", "!", ",", ":", "-", "--", "...", ";"] 
+        ".", "?", "!", ",", ":", "-", "--", "...", ";"]
 
 class PTBTokenizer:
     """Python wrapper of Stanford PTBTokenizer"""
@@ -52,7 +52,7 @@ class PTBTokenizer:
         # save sentences to temporary file
         # ======================================================
         path_to_jar_dirname=os.path.dirname(os.path.abspath(__file__))
-        tmp_file = tempfile.NamedTemporaryFile(delete=False, dir=path_to_jar_dirname)
+        tmp_file = tempfile.NamedTemporaryFile(mode='w+', delete=False, dir=path_to_jar_dirname)
         tmp_file.write(sentences)
         tmp_file.close()
 
@@ -63,7 +63,7 @@ class PTBTokenizer:
         p_tokenizer = subprocess.Popen(cmd, cwd=path_to_jar_dirname, \
                 stdout=subprocess.PIPE)
         token_lines = p_tokenizer.communicate(input=sentences.rstrip())[0]
-        lines = token_lines.split('\n')
+        lines = token_lines.decode().split('\n')
         # remove temp file
         os.remove(tmp_file.name)
 

@@ -101,7 +101,7 @@ class CiderScorer(object):
         '''
         for refs in self.crefs:
             # refs, k ref captions of one image
-            for ngram in set([ngram for ref in refs for (ngram,count) in ref.items()]):
+            for ngram in set([ngram for ref in refs for (ngram,count) in list(ref.items())]):
                 self.document_frequency[ngram] += 1
             # maxcounts[ngram] = max(maxcounts.get(ngram,0), count)
 
@@ -117,7 +117,7 @@ class CiderScorer(object):
             vec = [defaultdict(float) for _ in range(self.n)]
             length = 0
             norm = [0.0 for _ in range(self.n)]
-            for (ngram,term_freq) in cnts.items():
+            for (ngram,term_freq) in list(cnts.items()):
                 # give word count 1 if it doesn't appear in reference corpus
                 df = np.log(max(1.0, self.document_frequency[ngram]))
                 # ngram index
@@ -148,7 +148,7 @@ class CiderScorer(object):
             val = np.array([0.0 for _ in range(self.n)])
             for n in range(self.n):
                 # ngram
-                for (ngram,count) in vec_hyp[n].items():
+                for (ngram,count) in list(vec_hyp[n].items()):
                     # vrama91 : added clipping
                     val[n] += min(vec_hyp[n][ngram], vec_ref[n][ngram]) * vec_ref[n][ngram]
 
@@ -194,7 +194,7 @@ class CiderScorer(object):
             assert(len(self.ctest) >= max(self.document_frequency.values()))
             # import json for now and write the corresponding files
         else:
-            self.document_frequency = pickle.load(open(os.path.join('data', df_mode + '.p'),'r'))
+            self.document_frequency = pickle.load(open(os.path.join('cider/data', df_mode + '.p'),'rb'), encoding='latin1')
         # compute cider score
         score = self.compute_cider(df_mode)
         # debug

@@ -25,7 +25,7 @@ class CIDErEvalCap:
 
         print('setting up scorers...')
         scorers = [
-            (Cider(df=self.df), "CIDEr"), (CiderD(df=self.df), "CIDErD")
+            (Cider(df=self.df), "CIDEr")
         ]
 
         # =================================================
@@ -33,8 +33,8 @@ class CIDErEvalCap:
         # =================================================
         metric_scores = {}
         for scorer, method in scorers:
-            print('computing %s score...' % (scorer.method()))
+            print(('computing %s score...' % (scorer.method())))
             score, scores = scorer.compute_score(self.gts, self.res)
-            print("Mean %s score: %0.3f" % (method, score))
+            print(("Mean %s score: %0.3f" % (method, score)))
             metric_scores[method] = list(scores)
         return metric_scores
