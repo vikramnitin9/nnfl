@@ -1,3 +1,5 @@
+A Keras implementation of this paper [https://arxiv.org/pdf/1612.03557.pdf] ("Text-guided Attention Model for Image Captioning")
+
 Requirements :
 1. Tensorflow
 2. Keras
