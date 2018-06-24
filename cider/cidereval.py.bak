@@ -1,58 +1,72 @@
 # coding: utf-8
 
 # In[1]:
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+
+import os
+import numpy as np
+
+import _pickle as cPickle
 
 # demo script for running CIDEr
 import json
 from pydataformat.loadData import LoadData
 from pyciderevalcap.eval import CIDErEvalCap as ciderEval
 
-# load the configuration file
-# config = json.loads(open('params.json', 'r').read())
-
-# pathToData = config['pathToData']
-# refName = config['refName']
-# candName = config['candName']
-# resultFile = config['resultFile']
-# df_mode = config['idf']
-
-pathToData = '../COCO/annotations'
-refName = 'captions_train2014.json'
-# candName =
+pathToData = 'COCO/'
+refName = 'annotations/captions_train2014.json'
 df_mode = 'coco-val-df'
-
-# Print the parameters
-print ("Running CIDEr with the following settings")
-print ("*****************************")
-print ("Reference File:%s" % (refName))
-# print "Candidate File:%s" % (candName)
-print ("IDF:%s" % (df_mode))
-print ("*****************************")
+image_dir = 'train2014'
 
 # In[2]:
 
 # load reference and candidate sentences
-loadDat = LoadData(pathToData)
-ref = loadDat.readJson(refName)
+# loadDat = LoadData(pathToData)
+# ref = loadDat.readJson(refName)
 
-candidates = ['Hello how are you', 'Today is a nice day']
+ann_path = os.path.join(pathToData, refName)
 
-print(np.shape(ref))
+data = json.load(open(ann_path, 'r'))
 
-# In[3]:
+ann_data = data['annotations']
 
-# calculate cider scores
-# scorer = ciderEval(gts, res, df_mode)
-# # scores: dict of list with key = metric and value = score given to each
-# # candidate
-# scores = scorer.evaluate()
+# print(ann_data[291]['caption'])
 
-# print(scores['CIDEr'])
+print(data['images'][0].keys())
+print(ann_data[0].keys())
 
-# In[7]:
+image_ids = [ann['image_id'] for ann in ann_data]
+annotations = [ann['caption'] for ann in ann_data]
 
-# scores['CIDEr'] contains CIDEr scores in a list for each candidate
-# scores['CIDErD'] contains CIDEr-D scores in a list for each candidate
+images = os.listdir(os.path.join(pathToData, image_dir))
+
+print(image_ids[:5])
+
+names = ["COCO_train2014_" + "{:012}".format(int(i)) + '.jpg' for i in image_ids]
+
+print(names[:5])
+
+caption_dict = {}
+
+for i in range(len(annotations)):
+	caption_dict[names[i]] = annotations[i]
+
+with open('precomputed/fc7-features.pkl', 'rb') as f:
+	features = cPickle.load(f)
+
+K = 10
+curr_score = []
+
+for key in features:
+	print(key)
+	dist = []
+	for key2 in features:
+		dist.append(np.sqrt(np.sum((features[key] - features[key2]) ** 2)))
+
+	ind = np.argpartition(dist, -K)[-K:]
+
+	gts = [caption_dict[key]]
+	res = [caption_dict[names[i]] for i in ind]
+
+	scorer = ciderEval(gts, res, df='coco-val-df')
+	curr_score = scorer.evaluate()['CIDEr']
+	scores.append(curr_score)

@@ -1,0 +1,30 @@
+Requirements :
+1. Tensorflow
+2. Keras
+3. NLTK (install through pip)
+4. tqdm (used for displaying progress bars; install through pip)
+
+Data set and other things to be downloaded :
+1. COCO dataset images [http://images.cocodataset.org/zips/train2014.zip]
+
+2. COCO dataset annotations [http://images.cocodataset.org/annotations/annotations_trainval2014.zip]
+(Note : extract the above two into a folder called 'COCO')
+
+3. STV model [http://download.tensorflow.org/models/skip_thoughts_bi_2017_02_16.tar.gz]
+(Note : extract this into a folder called 'skip_thoughts_bi' inside the 'skip_thoughts' folder)
+
+Precomputation scripts :
+1. VGG-FC7 [fc7_precompute.py]
+
+2. CIDEr scores [cider_precompute.py]
+
+3. STV encodings [st_precompute.py]
+
+At this point, you should have three files in the main directory :
+1. caption_dict.pkl
+2. stv-encodings.pkl
+3. fc7-features.pkl
+
+Put them in a directory called 'precomputed' inside the main directory.
+
+Now run 'pipeline.py' to start training.

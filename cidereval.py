@@ -1,17 +1,16 @@
-# coding: utf-8
-
-# In[1]:
-
 import os
 import numpy as np
 import itertools
 
 import _pickle as cPickle
 
-# demo script for running CIDEr
+from time import time
+
 import json
 from cider.pydataformat.loadData import LoadData
 from cider.pyciderevalcap.eval import CIDErEvalCap as ciderEval
+from cider.pyciderevalcap.tokenizer.ptbtokenizer import PTBTokenizer
+from cider.pyciderevalcap.cider.cider import Cider
 
 pathToData = 'COCO/'
 refName = 'annotations/captions_train2014.json'
@@ -44,32 +43,52 @@ class GuidanceCaption:
 
 		self.full_gts = {n : [{'caption' : c} for c in captions[n]] for n in self.fnames}
 
-		self.pair_list = []
+		tokenizer = PTBTokenizer('gts')
+		self.full_gts = tokenizer.tokenize(self.full_gts)
+
+		pair_list = []
 
 		for n in self.fnames:
 			for c in captions[n]:
-				self.pair_list.append((n,c))
+				pair_list.append((n,c))
+
+		self.full_res = [{'image_id' : n, 'caption' : c} for n,c in pair_list]
+
+		tokenizer = PTBTokenizer('res')
+		self.full_res = tokenizer.tokenize(self.full_res)
 
 	def getGC(self, fname, K=60):
-		print("Computing Guidance Caption for " + fname)
+		feature = self.features[fname]
 
-		if fname not in self.features:
-			print("Error : unknown file " + fname)
-			return
-
+		# t = time()
 		dist = []
 		for key2 in self.fnames:
-			dist.append(np.sqrt(np.sum((self.features[fname] - self.features[key2]) ** 2)))
+			dist.append(np.sum((feature - self.features[key2]) ** 2))
+		# print("dist", time()-t)
 
 		ind = np.argpartition(dist, K)[:K]
+
+		# t = time()
 		nearest_names = self.fnames[ind]
+		nearest_names = set(nearest_names)
 
 		gts = {n : self.full_gts[n] for n in nearest_names}
+		res = [r for r in self.full_res if r['image_id'] in nearest_names]
+		# print("dics ", time()-t) #0.02
 
-		res = [{'image_id' : n, 'caption' : c} for n,c in self.pair_list if n in nearest_names]
+		# t = time()
+		scorers = [
+			(Cider(df=df_mode), "CIDEr")
+		]
+		# print("ciderobj", time()-t) # 0.00050
 
-		scorer = ciderEval(gts, res, df_mode)
-		scores = scorer.evaluate()['CIDEr']
+		# t = time()
+		for scorer, method in scorers:
+			scores = scorer.compute_score(gts, res)
+		# print("scorerloop ", time()-t)  # 0.04
 
+		# t = time()
 		best_caption = res[np.argmax(scores)]['caption']
+		# print("argmax", time()-t) # 0.0
+
 		return best_caption
